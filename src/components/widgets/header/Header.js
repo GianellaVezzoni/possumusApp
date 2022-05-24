@@ -1,14 +1,14 @@
 import React, {useState} from 'react';
 import {
   View,
-  Text,
   TouchableOpacity
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
+import Sidebar from '../../Sidebar';
 
-const Header = () => {
-  const [isSidebarVisible, setIsSidebarVisible] = useState(false);
-
+const Header = (props) => {
+  console.log('props ', props)
+  const [isSidebarVisible, setIsSidebarVisible] = useState(true);
   return (
     <View style={{
       backgroundColor: '#D3CACA',
@@ -21,15 +21,9 @@ const Header = () => {
       >
         <Icon name="menu-outline" color={'#000'} size={30} />
       </TouchableOpacity>
-      {isSidebarVisible && (
-        <View>
-          <Text>
-            Sidebar
-          </Text>
-        </View>
-      )}
+      {isSidebarVisible && <Sidebar setIsSidebarVisible={setIsSidebarVisible} navigation={props} />}
     </View>
   )
 }
 
-export default Header
+export default Header;

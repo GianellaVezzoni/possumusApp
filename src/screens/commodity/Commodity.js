@@ -1,32 +1,36 @@
 import React, {useState, useEffect, useCallback} from 'react'
-import {View, Text, TextInput} from 'react-native';
+import {View, Text, TextInput, SafeAreaView} from 'react-native';
 import { getCommodityPrices } from '../../api/commodity';
 import CommodityList from '../../components/commodityList/CommodityList';
 import Footer from '../../components/widgets/footer/Footer';
 import Header from '../../components/widgets/header/Header';
-import { adaptCommodityInformation } from './Commodity.controller';
+import { adaptCommodityInformation, searchDataByFilter } from './Commodity.controller';
 import { styles } from './styles';
 import {useNewCommodityContext} from '../../context/CommodityContext';
 
-const Commodity = () => {
-  const {data, startYear, endYear, dispatch} = useNewCommodityContext();
+const Commodity = (props) => {
+  const {data, dispatch} = useNewCommodityContext();
+  const [currentData, setCurrentData] = useState([]);
   const [startYearFilter, setStartYearFilter] = useState('2001');
-  const [endYearFilter, setEndYearFilter] = useState('');
-  const [commodityData, setcommodityData] = useState(data || []);
+  const [endYearFilter, setEndYearFilter] = useState('2016');
 
   const getCommodities = useCallback(async()=> {
-    const response = await getCommodityPrices(startYearFilter, endYearFilter);
-    const itemsOrdered = adaptCommodityInformation(response, startYear, endYear, dispatch);
-    setcommodityData(itemsOrdered);
-  },[getCommodityPrices, startYear, endYear]);
+    const previousData = searchDataByFilter(startYearFilter, endYearFilter, data);
+    if(!previousData.length){
+      const response = await getCommodityPrices(startYearFilter, endYearFilter, dispatch);
+      adaptCommodityInformation(response, data, dispatch, setCurrentData);
+    }else{
+      setCurrentData(previousData)
+    }
+  },[getCommodityPrices, startYearFilter, endYearFilter]);
 
   useEffect(()=> {
     getCommodities();
   },[getCommodities]);
 
   return (
-    <View>
-      <Header />
+    <SafeAreaView>
+      <Header props={props} />
       <View style={styles.viewMainContainer}>
         <Text style={styles.titleText}>
           Commodity Price
@@ -41,7 +45,9 @@ const Commodity = () => {
             </Text>
             <TextInput 
               style={styles.yearInput} 
-              value={startYearFilter} 
+              value={startYearFilter}
+              keyboardType={'numeric'}
+              maxLength={4}
               onChangeText={(text)=> setStartYearFilter(text)} 
             />
           </View>
@@ -51,18 +57,20 @@ const Commodity = () => {
             </Text>
             <TextInput 
               style={styles.yearInput} 
-              value={endYearFilter} 
+              value={endYearFilter}
+              maxLength={4}
+              keyboardType={'numeric'}
               onChangeText={(text)=> 
-              setEndYearFilter(text)} 
+              setEndYearFilter(text)}
             />
           </View>
         </View>
         <View style={styles.viewListContainer}>
-          <CommodityList data={commodityData} />
+          <CommodityList data={currentData} />
         </View>
       </View>
       <Footer />
-    </View>
+    </SafeAreaView>
   )
 }
 
